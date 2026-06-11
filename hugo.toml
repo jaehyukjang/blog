@@ -1,8 +1,9 @@
 baseURL = "https://jaehyukjang.github.io/blog/"
-languageCode = "en-us"
 title = "Jaehyuk Jang"
 theme = "PaperMod"
 googleAnalytics = "G-6NJNGQBTP2"
+defaultContentLanguage = "ko"
+
 [pagination]
   pagerSize = 10
 
@@ -20,10 +21,6 @@ googleAnalytics = "G-6NJNGQBTP2"
   defaultTheme = "auto"
   env = "production"
 
-  [params.homeInfoParams]
-    Title = "Jaehyuk Jang"
-    Content = "Senior Data Engineer — Spark, Flink, Iceberg, CDC, Airflow, dbt"
-
   [[params.socialIcons]]
     name = "linkedin"
     url = "https://linkedin.com/in/jaehyuk-jang-bab185178"
@@ -36,24 +33,52 @@ googleAnalytics = "G-6NJNGQBTP2"
     name = "email"
     url = "mailto:jjhyuk92@gmail.com"
 
-[menu]
-  [[menu.main]]
-    identifier = "posts"
-    name = "Posts"
-    url = "/posts/"
+[languages]
+  [languages.ko]
+    languageCode = "ko"
+    languageName = "한국어"
     weight = 1
+    [languages.ko.params.homeInfoParams]
+      Title = "Jaehyuk Jang"
+      Content = "Senior Data Engineer — Spark, Flink, Iceberg, CDC, Airflow, dbt"
+    [[languages.ko.menu.main]]
+      identifier = "posts"
+      name = "Posts"
+      url = "/posts/"
+      weight = 1
+    [[languages.ko.menu.main]]
+      identifier = "tags"
+      name = "Tags"
+      url = "/tags/"
+      weight = 2
+    [[languages.ko.menu.main]]
+      identifier = "about"
+      name = "About"
+      url = "/about/"
+      weight = 3
 
-  [[menu.main]]
-    identifier = "tags"
-    name = "Tags"
-    url = "/tags/"
+  [languages.en]
+    languageCode = "en"
+    languageName = "EN"
     weight = 2
-
-  [[menu.main]]
-    identifier = "about"
-    name = "About"
-    url = "/about/"
-    weight = 3
+    [languages.en.params.homeInfoParams]
+      Title = "Jaehyuk Jang"
+      Content = "Senior Data Engineer — Spark, Flink, Iceberg, CDC, Airflow, dbt"
+    [[languages.en.menu.main]]
+      identifier = "posts"
+      name = "Posts"
+      url = "/en/posts/"
+      weight = 1
+    [[languages.en.menu.main]]
+      identifier = "tags"
+      name = "Tags"
+      url = "/en/tags/"
+      weight = 2
+    [[languages.en.menu.main]]
+      identifier = "about"
+      name = "About"
+      url = "/en/about/"
+      weight = 3
 
 [taxonomies]
   tag = "tags"
