@@ -28,6 +28,8 @@ AWS에서 Athena를 쓰는 팀이라면 대부분 이렇게 알고 있습니다:
 
 저희 데이터 플랫폼의 S3 비용을 API operation별로 뜯어봤습니다:
 
+![S3 Monthly Cost: Storage vs GetObject](/blog/images/s3-cost-storage-vs-get.png)
+
 | 월 | Storage | GetObject | 총 비용 | GET 비율 |
 |---|---------|-----------|---------|---------|
 | 2025-07 | $28,081 | $4,308 | $36,339 | 12% |
