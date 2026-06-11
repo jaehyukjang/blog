@@ -1,0 +1,61 @@
+baseURL = "https://jaehyukjang.github.io/blog/"
+languageCode = "en-us"
+title = "Jaehyuk Jang"
+theme = "PaperMod"
+paginate = 10
+
+[params]
+  author = "Jaehyuk Jang"
+  description = "Data Engineering Blog"
+  showReadingTime = true
+  showShareButtons = false
+  showPostNavLinks = true
+  showBreadCrumbs = true
+  showCodeCopyButtons = true
+  defaultTheme = "auto"
+
+  [params.homeInfoParams]
+    Title = "Jaehyuk Jang"
+    Content = "Senior Data Engineer — Spark, Flink, Iceberg, CDC, Airflow, dbt"
+
+  [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://linkedin.com/in/jaehyuk-jang-bab185178"
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/jaehyukjang"
+
+  [[params.socialIcons]]
+    name = "email"
+    url = "mailto:jjhyuk92@gmail.com"
+
+[menu]
+  [[menu.main]]
+    identifier = "posts"
+    name = "Posts"
+    url = "/posts/"
+    weight = 1
+
+  [[menu.main]]
+    identifier = "tags"
+    name = "Tags"
+    url = "/tags/"
+    weight = 2
+
+  [[menu.main]]
+    identifier = "about"
+    name = "About"
+    url = "/about/"
+    weight = 3
+
+[taxonomies]
+  tag = "tags"
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[markup]
+  [markup.highlight]
+    style = "monokai"
+    lineNos = false
