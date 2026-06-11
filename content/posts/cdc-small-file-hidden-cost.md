@@ -8,6 +8,8 @@ description: "Athena 비용은 스캔량이 전부가 아닙니다. CDC 파이�
 
 [CDC 파이프라인을 Debezium과 Flink로 재설계한 이유](https://blog.afinit.com/cdc-pipeline-debezium-flink)에서 Debezium + Flink 기반 CDC 파이프라인을 소개했습니다. Debezium이 DB 변경분을 캡처하고, Kafka를 거쳐, Flink가 5분마다 S3에 Parquet 파일로 저장하는 구조입니다.
 
+![CDC Pipeline Architecture](/blog/images/cdc-pipeline-architecture.png)
+
 파이프라인은 1년 넘게 잘 동작했습니다. 데이터 정합성도 검증됐고, 운영도 안정적이었습니다. 문제는 데이터 플랫폼 TCO 분석을 하면서 S3 비용을 뜯어보기 전까지는 보이지 않았습니다.
 
 ---
