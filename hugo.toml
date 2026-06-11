@@ -2,7 +2,8 @@ baseURL = "https://jaehyukjang.github.io/blog/"
 languageCode = "en-us"
 title = "Jaehyuk Jang"
 theme = "PaperMod"
-paginate = 10
+[pagination]
+  pagerSize = 10
 
 [params]
   author = "Jaehyuk Jang"
