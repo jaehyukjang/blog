@@ -2,6 +2,7 @@ baseURL = "https://jaehyukjang.github.io/blog/"
 languageCode = "en-us"
 title = "Jaehyuk Jang"
 theme = "PaperMod"
+googleAnalytics = "G-6NJNGQBTP2"
 [pagination]
   pagerSize = 10
 
@@ -14,6 +15,7 @@ theme = "PaperMod"
   showBreadCrumbs = true
   showCodeCopyButtons = true
   defaultTheme = "auto"
+  env = "production"
 
   [params.homeInfoParams]
     Title = "Jaehyuk Jang"
