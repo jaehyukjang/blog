@@ -1,0 +1,12 @@
+/* Table header styling */
+.post-content table thead th {
+  background-color: rgba(128, 128, 128, 0.15);
+  font-weight: 700;
+}
+
+/* Architecture diagram - white background for dark mode */
+.post-content img[src*="architecture"] {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+}
