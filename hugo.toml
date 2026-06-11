@@ -14,6 +14,9 @@ googleAnalytics = "G-6NJNGQBTP2"
   showPostNavLinks = true
   showBreadCrumbs = true
   showCodeCopyButtons = true
+  ShowToc = true
+  TocOpen = true
+  comments = true
   defaultTheme = "auto"
   env = "production"
 
