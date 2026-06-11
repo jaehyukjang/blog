@@ -63,15 +63,17 @@ S3 버킷에 태그를 달고 (예: `purpose: datalake`), Billing 콘솔의 Cost
 
 29개 prefix에 대해 분석 그룹을 만들어 돌렸습니다. 결과는 놀라웠습니다:
 
-> **주의:** GetRequestCount 컬럼은 이름과 달리 PUT request도 포함합니다. [AWS 문서](https://docs.aws.amazon.com/AmazonS3/latest/userguide/analytics-storage-class.html)에도 mislabelled라고 명시되어 있으니, 정확한 GET 비용 산정 시 이 점을 감안해야 합니다.
+> **주의:** GetRequestCount 컬럼은 이름과 달리 GET + PUT 합산입니다. [AWS 문서](https://docs.aws.amazon.com/AmazonS3/latest/userguide/analytics-storage-class.html)에도 mislabelled라고 명시되어 있으니, 정확한 비용 산정 시 이 점을 감안해야 합니다.
 
-| Prefix | GET (M/day) | 일간 조회량 | 월 비용 (추정) |
-|--------|------------|-----------|--------------|
-| truecredits_changes | 2,839 | 111 TB | ~$5,760 |
-| truecredits.db | 10.5 | 2.6 TB | ~$127 |
-| tb_user.db | 7.9 | 1.5 TB | ~$95 |
+| Prefix | Requests (M/day) | 일간 조회량 | 비율 |
+|--------|------------|-----------|------|
+| truecredits_changes | 718 | 117 TB | 92.7% |
+| truecredits.db | 14 | 12 TB | 1.9% |
+| tb_user.db | 9 | 7 TB | 1.2% |
+| 나머지 26개 prefix | 34 | 32 TB | 4.2% |
+| **합계** | **775** | **168 TB** | |
 
-**truecredits_changes 하나가 전체 GET request의 93%를 차지**하고 있었습니다.
+**truecredits_changes 하나가 전체 request의 93%를 차지**하고 있었습니다.
 
 ### 3. 스키마별 파일 분석
 
@@ -112,20 +114,83 @@ S3에서 파일을 읽으려면 파일마다 HTTP connection을 열어야 합니
 
 Athena든 Spark든, 엔진이 아무리 빨라도 수십만 개 파일을 열어야 하면 느려질 수밖에 없습니다.
 
-<!-- TODO: 버저닝된 데이터 복구하여 compaction 전/후 동일 쿼리 성능 비교 벤치마크 추가 -->
+실제로 얼마나 차이가 나는지 확인하기 위해 벤치마크를 진행했습니다. S3 versioning으로 보존된 compaction 전 원본 파일(45,008개)을 별도 버킷에 복원하고, compaction 후 파일(310개)과 동일한 Athena 쿼리로 비교했습니다. 두 데이터셋의 row count는 59,184,128건으로 완전히 일치합니다.
+
+```sql
+-- Q1: 전체 COUNT (155일)
+SELECT count(*)
+FROM tc_loan
+WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
+```
+→ Before: 4,542ms / After: 1,403ms (**-69%**)
+
+```sql
+-- Q2: 필터 COUNT
+SELECT count(*)
+FROM tc_loan
+WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
+  AND status = 'CLOSED'
+```
+→ Before: 2,138ms / After: 1,041ms (**-51%**)
+
+```sql
+-- Q3: GROUP BY 집계
+SELECT status, count(*)
+FROM tc_loan
+WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
+GROUP BY status
+ORDER BY 2 DESC
+```
+→ Before: 2,752ms / After: 1,243ms (**-55%**)
+
+```sql
+-- Q4: 단일 날짜 COUNT
+SELECT count(*)
+FROM tc_loan
+WHERE dt = '2026-03-01'
+```
+→ Before: 826ms / After: 560ms (**-32%**)
+
+| 쿼리 | Before (45,008 files) | After (310 files) | 개선 |
+|------|----------------------|-------------------|------|
+| Q1. COUNT(*) 전체 | 4,542ms | 1,403ms | **-69%** |
+| Q2. COUNT + 필터 | 2,138ms | 1,041ms | **-51%** |
+| Q3. GROUP BY 집계 | 2,752ms | 1,243ms | **-55%** |
+| Q4. 단일 날짜 COUNT | 826ms | 560ms | **-32%** |
+
+전체 스캔, 필터, 집계 쿼리 전반에서 **32~69% 성능 개선**이 확인되었습니다. 스캔해야 할 데이터 총량은 동일하지만, 파일을 여는 오버헤드만으로 이 정도 차이가 발생합니다.
 
 ---
 
 ## 해결: Daily Compaction
 
-근본적으로는 Flink의 checkpoint interval을 늘리면 파일 수를 줄일 수 있지만, CDC 데이터를 소비하는 다운스트림이 다양했습니다 — 비즈니스 모니터링, CDC 기반 테이블 복제, 기타 파이프라인 등. checkpoint interval 변경은 이 모든 곳에 영향을 주기 때문에 고려하지 않았습니다.
+해결 방법은 세 가지를 검토했습니다.
 
-대신 이미 적재된 파일을 사후에 합치는 Daily Compaction 파이프라인을 만들었습니다:
+**1. Flink checkpoint interval 증가**
+- 장점: 가장 단순함
+- 단점: 데이터 freshness 저하, 비즈니스 모니터링·CDC 기반 복제 등 다운스트림 전체에 영향
+
+**2. Flink → Iceberg 직접 적재**
+- 장점: table format 차원에서 small file 관리 가능
+- 단점: Flink sink 재설계 필요, migration 리스크 큼
+
+**3. 사후 Daily Compaction**
+- 장점: 기존 ingestion 경로 변경 없음, 점진적 적용 가능
+- 단점: 추가 batch 비용, 원본 파일 교체 시 안정성 검증 필요
+
+3번을 선택했습니다. 기존 파이프라인을 건드리지 않고, 가장 낮은 리스크로 같은 효과를 낼 수 있는 방법이었습니다:
 
 - 파티션(dt) 단위로 모든 Small File을 읽어 128MB 단위로 재작성
-- CDC 데이터 특성상 같은 row의 중복 이벤트가 있을 수 있어 `dropDuplicates` 적용
 - binlog position 기반 정렬 보존
 - Airflow에서 매일 CDC 적재 완료 후 트리거
+
+Compaction은 원본 파일을 직접 교체하는 작업이므로, 데이터를 잃지 않기 위한 안전 장치가 필요합니다. Safe Swap 패턴을 적용했습니다:
+
+1. compaction 결과를 임시 경로(`_tmp_compact/`)에 먼저 작성
+2. 임시 경로에 파일이 정상 생성되었는지 검증
+3. 검증 통과 후 원본 삭제 → 임시 파일을 원래 경로로 복사 → 임시 파일 삭제
+
+만약 3단계 중간에 장애가 발생하더라도, `_tmp_compact/`에 데이터가 남아있어 복구할 수 있습니다. 또한 compaction 전후 row count를 비교하여 데이터 유실이 없는지 검증합니다.
 
 단일 파티션 테스트 결과: **72,885개 → 839개 (99% 감소)**
 
@@ -140,16 +205,14 @@ Athena든 Spark든, 엔진이 아무리 빨라도 수십만 개 파일을 열어
 | 지표 | Before | After | 변화 |
 |------|--------|-------|------|
 | CDC _changes 파일 수 | 31,400,000 | 369,000 | -98.8% |
-| 평균 파일 크기 | 335 KB | ~128 MB | +380x |
+| 평균 파일 크기 | 335 KB | 128 MB (target) | |
 
-Compaction 전후 GET request 변화 (다른 변수 제거 후 순수 compaction 효과):
+Compaction 전후 변화 (Storage Class Analysis 기준, 순수 compaction 효과):
 
-| 지표 | Before | After | 변화 |
-|------|--------|-------|------|
-| _changes GET requests | ~968M/day | ~361M/day | -63% |
-| GET 비용 (추정) | ~$11,600/month | ~$4,300/month | **-$7,300/month** |
-
-절감의 대부분은 가장 큰 단일 prefix에서 발생했습니다 (960M → 341M, -64%).
+| 지표 | Before (6/5~6/8 avg) | After (6/10) | 변화 |
+|------|---------------------|-------------|------|
+| _changes request 수 | 718M/day | 254M/day | -65% |
+| request 비용 (추정) | ~$8,600/month | ~$3,000/month | **-$5,600/month** |
 
 현재는 매일 자동으로 전날 파티션이 compaction되므로, Small File이 다시 누적되지 않습니다.
 
