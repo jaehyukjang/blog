@@ -61,7 +61,7 @@ S3 버킷에 태그를 달고 (예: `purpose: datalake`), Billing 콘솔의 Cost
 
 버킷 내 prefix별 접근 패턴을 분석할 수 있는 기능입니다. 콘솔에서는 제한된 시각화만 제공하지만, destination bucket을 설정하면 날짜별로 prefix별 GetRequestCount, DataRetrieved_MB, Storage_MB 등을 CSV로 export할 수 있습니다. 매일 append되므로 추이 분석이 가능합니다.
 
-29개 prefix에 대해 분석 그룹을 만들어 돌렸습니다. 결과는 놀라웠습니다:
+29개 prefix에 대해 분석 그룹을 만들어 돌렸습니다. 동시에 여러 최적화가 진행되고 있었기 때문에, 다른 요인을 배제하기 위해 compaction 직전 안정 구간(6/5~6/8)의 평균을 기준으로 분석했습니다:
 
 > **주의:** GetRequestCount 컬럼은 이름과 달리 GET + PUT 합산입니다. [AWS 문서](https://docs.aws.amazon.com/AmazonS3/latest/userguide/analytics-storage-class.html)에도 mislabelled라고 명시되어 있으니, 정확한 비용 산정 시 이 점을 감안해야 합니다.
 
@@ -86,7 +86,7 @@ Storage Class Analysis가 비용의 "어디"를 알려줬다면, "왜"를 알기
 | 평균 파일 크기 | 335 KB |
 | 100KB 미만 비율 | 79% |
 
-평균 335KB. Parquet 파일로서는 말도 안 되는 크기입니다.
+평균 335KB. Parquet 파일로 운영하기에는 명백히 비효율적인 크기였습니다.
 
 ---
 
@@ -108,11 +108,15 @@ Small File 문제는 비용만의 문제가 아닙니다.
 
 S3에서 파일을 읽으려면 파일마다 HTTP connection을 열어야 합니다. 128MB 파일 1개를 읽는 것과 335KB 파일 400개를 읽는 것은 전송할 데이터 총량은 비슷해도 **오버헤드가 수백 배** 다릅니다.
 
-- 각 파일마다 S3 LIST → GET → 열기 → 스키마 파싱 → 읽기 → 닫기
+- 파티션/prefix의 파일 목록을 조회한 뒤, 각 object를 개별적으로 열어야 함
+- 파일마다 GET 또는 range GET, Parquet footer/metadata 확인, schema 처리, task scheduling 오버헤드 발생
 - connection 재사용이 안 되면 TCP handshake + TLS 협상까지 매번 발생
-- Parquet footer를 읽기 위한 추가 request (파일당 최소 2번 GET)
 
 Athena든 Spark든, 엔진이 아무리 빨라도 수십만 개 파일을 열어야 하면 느려질 수밖에 없습니다.
+
+---
+
+## 실제로 얼마나 느려지는가
 
 실제로 얼마나 차이가 나는지 확인하기 위해 벤치마크를 진행했습니다. S3 versioning으로 보존된 compaction 전 원본 파일(45,008개)을 별도 버킷에 복원하고, compaction 후 파일(310개)과 동일한 Athena 쿼리로 비교했습니다. 두 데이터셋의 row count는 59,184,128건으로 완전히 일치합니다.
 
@@ -192,6 +196,8 @@ Compaction은 원본 파일을 직접 교체하는 작업이므로, 데이터를
 
 만약 3단계 중간에 장애가 발생하더라도, `_tmp_compact/`에 데이터가 남아있어 복구할 수 있습니다. 또한 compaction 전후 row count를 비교하여 데이터 유실이 없는지 검증합니다.
 
+다만 S3는 원자적 rename/replace를 제공하지 않기 때문에, active partition에는 적용하지 않았습니다. CDC 적재가 완료된 전날 파티션만 대상으로 삼고, 쿼리와 충돌 가능성이 낮은 시간대에 실행했습니다.
+
 단일 파티션 테스트 결과: **72,885개 → 839개 (99% 감소)**
 
 520일치 백필도 진행했습니다. 3,140만 개 파일이 36.9만 개로 줄었습니다 (98.8% 감소).
@@ -205,14 +211,17 @@ Compaction은 원본 파일을 직접 교체하는 작업이므로, 데이터를
 | 지표 | Before | After | 변화 |
 |------|--------|-------|------|
 | CDC _changes 파일 수 | 31,400,000 | 369,000 | -98.8% |
-| 평균 파일 크기 | 335 KB | 128 MB (target) | |
+| 평균 파일 크기 | 335 KB | 파티션별 상이 | |
+| Compaction target size | - | 128 MB | |
 
-Compaction 전후 변화 (Storage Class Analysis 기준, 순수 compaction 효과):
+Compaction 전후 변화 (Storage Class Analysis 기준):
 
 | 지표 | Before (6/5~6/8 avg) | After (6/10) | 변화 |
 |------|---------------------|-------------|------|
 | _changes request 수 | 718M/day | 254M/day | -65% |
 | request 비용 (추정) | ~$8,600/month | ~$3,000/month | **-$5,600/month** |
+
+동일 prefix의 compaction 전후 request 추이를 비교했으며, 쿼리량 변동이 있을 수 있어 실제 청구액과 1:1로 대응되지는 않습니다.
 
 현재는 매일 자동으로 전날 파티션이 compaction되므로, Small File이 다시 누적되지 않습니다.
 
@@ -220,7 +229,7 @@ Compaction 전후 변화 (Storage Class Analysis 기준, 순수 compaction 효�
 
 ## 돌이켜보면
 
-"Athena 비용 = 스캔량"이라는 상식이 오히려 문제를 늦게 발견하게 만들었습니다. Athena 서비스 요금만 보면 월 수백 달러 수준이라 심각해 보이지 않습니다. 하지만 그 뒤에서 S3 GET request가 하루 수십억 건씩 일어나고 있었고, 그 비용은 S3 청구서에 묻혀 있었습니다.
+"Athena 비용 = 스캔량"이라는 상식이 오히려 문제를 늦게 발견하게 만들었습니다. Athena 서비스 요금만 보면 월 수백 달러 수준이라 심각해 보이지 않습니다. 하지만 그 뒤에서 S3 GET request가 하루 수억 건씩 일어나고 있었고, 그 비용은 S3 청구서에 묻혀 있었습니다.
 
 **S3에 데이터를 적재하는 스트리밍 파이프라인을 운영하고 계시다면 한 번쯤 확인해보시길 권합니다:**
 
