@@ -1,7 +1,7 @@
 ---
 title: "CDC 파이프라인의 숨겨진 비용: Small File이 만드는 S3 Request 폭탄"
 date: 2026-06-11
-draft: true
+draft: false
 tags: ["cdc", "s3", "cost-optimization", "debezium", "flink"]
 description: "Athena 비용은 스캔량이 전부가 아닙니다. CDC 파이프라인이 만든 수백만 개의 Small File이 S3 Request 비용과 쿼리 성능을 어떻게 잠식하는지, 그리고 어떻게 해결했는지를 공유합니다."
 ---
@@ -26,7 +26,6 @@ AWS에서 Athena를 쓰는 팀이라면 대부분 이렇게 알고 있습니다:
 
 **GET request 1,000건당 $0.0004** (ap-south-1 기준) — 작아 보이지만, 파일이 수십만 개면 얘기가 달라집니다.
 
-<!-- TODO: 회사 비용 수치 공개 여부 확인 필요. 절대 금액 제거하고 비율/정규화(첫 달=100)로 변환하는 방안 검토 -->
 저희 데이터 플랫폼의 S3 비용을 API operation별로 뜯어봤습니다:
 
 | 월 | Storage | GetObject | 총 비용 | GET 비율 |
@@ -67,13 +66,13 @@ S3 버킷에 태그를 달고 (예: `purpose: datalake`), Billing 콘솔의 Cost
 
 | Prefix | Requests (M/day) | 일간 조회량 | 비율 |
 |--------|------------|-----------|------|
-| truecredits_changes | 718 | 117 TB | 92.7% |
-| truecredits.db | 14 | 12 TB | 1.9% |
-| tb_user.db | 9 | 7 TB | 1.2% |
+| service_a.cdc | 718 | 117 TB | 92.7% |
+| service_a.db | 14 | 12 TB | 1.9% |
+| service_b.db | 9 | 7 TB | 1.2% |
 | 나머지 26개 prefix | 34 | 32 TB | 4.2% |
 | **합계** | **775** | **168 TB** | |
 
-**truecredits_changes 하나가 전체 request의 93%를 차지**하고 있었습니다.
+**service_a.cdc 하나가 전체 request의 93%를 차지**하고 있었습니다.
 
 ### 3. 스키마별 파일 분석
 
@@ -113,56 +112,6 @@ S3에서 파일을 읽으려면 파일마다 HTTP connection을 열어야 합니
 - connection 재사용이 안 되면 TCP handshake + TLS 협상까지 매번 발생
 
 Athena든 Spark든, 엔진이 아무리 빨라도 수십만 개 파일을 열어야 하면 느려질 수밖에 없습니다.
-
----
-
-## 실제로 얼마나 느려지는가
-
-실제로 얼마나 차이가 나는지 확인하기 위해 벤치마크를 진행했습니다. S3 versioning으로 보존된 compaction 전 원본 파일(45,008개)을 별도 버킷에 복원하고, compaction 후 파일(310개)과 동일한 Athena 쿼리로 비교했습니다. 두 데이터셋의 row count는 59,184,128건으로 완전히 일치합니다.
-
-```sql
--- Q1: 전체 COUNT (155일)
-SELECT count(*)
-FROM tc_loan
-WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
-```
-→ Before: 4,542ms / After: 1,403ms (**-69%**)
-
-```sql
--- Q2: 필터 COUNT
-SELECT count(*)
-FROM tc_loan
-WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
-  AND status = 'CLOSED'
-```
-→ Before: 2,138ms / After: 1,041ms (**-51%**)
-
-```sql
--- Q3: GROUP BY 집계
-SELECT status, count(*)
-FROM tc_loan
-WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
-GROUP BY status
-ORDER BY 2 DESC
-```
-→ Before: 2,752ms / After: 1,243ms (**-55%**)
-
-```sql
--- Q4: 단일 날짜 COUNT
-SELECT count(*)
-FROM tc_loan
-WHERE dt = '2026-03-01'
-```
-→ Before: 826ms / After: 560ms (**-32%**)
-
-| 쿼리 | Before (45,008 files) | After (310 files) | 개선 |
-|------|----------------------|-------------------|------|
-| Q1. COUNT(*) 전체 | 4,542ms | 1,403ms | **-69%** |
-| Q2. COUNT + 필터 | 2,138ms | 1,041ms | **-51%** |
-| Q3. GROUP BY 집계 | 2,752ms | 1,243ms | **-55%** |
-| Q4. 단일 날짜 COUNT | 826ms | 560ms | **-32%** |
-
-전체 스캔, 필터, 집계 쿼리 전반에서 **32~69% 성능 개선**이 확인되었습니다. 스캔해야 할 데이터 총량은 동일하지만, 파일을 여는 오버헤드만으로 이 정도 차이가 발생합니다.
 
 ---
 
@@ -206,7 +155,6 @@ Compaction은 원본 파일을 직접 교체하는 작업이므로, 데이터를
 
 ## 결과
 
-<!-- TODO: 비용 수치 공개 여부 확인 필요 -->
 
 | 지표 | Before | After | 변화 |
 |------|--------|-------|------|
@@ -224,6 +172,56 @@ Compaction 전후 변화 (Storage Class Analysis 기준):
 동일 prefix의 compaction 전후 request 추이를 비교했으며, 쿼리량 변동이 있을 수 있어 실제 청구액과 1:1로 대응되지는 않습니다.
 
 현재는 매일 자동으로 전날 파티션이 compaction되므로, Small File이 다시 누적되지 않습니다.
+
+---
+
+## 성능은 얼마나 개선되었는가
+
+비용뿐 아니라 쿼리 성능도 확인하기 위해 벤치마크를 진행했습니다. S3 versioning으로 보존된 compaction 전 원본 파일(45,008개)을 별도 버킷에 복원하고, compaction 후 파일(310개)과 동일한 Athena 쿼리로 비교했습니다. 두 데이터셋의 row count는 59,184,128건으로 완전히 일치합니다.
+
+```sql
+-- Q1: 전체 COUNT (155일)
+SELECT count(*)
+FROM loan
+WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
+```
+→ Before: 4,542ms / After: 1,403ms (**-69%**)
+
+```sql
+-- Q2: 필터 COUNT
+SELECT count(*)
+FROM loan
+WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
+  AND status = 'CLOSED'
+```
+→ Before: 2,138ms / After: 1,041ms (**-51%**)
+
+```sql
+-- Q3: GROUP BY 집계
+SELECT status, count(*)
+FROM loan
+WHERE dt >= '2026-01-01' AND dt <= '2026-06-05'
+GROUP BY status
+ORDER BY 2 DESC
+```
+→ Before: 2,752ms / After: 1,243ms (**-55%**)
+
+```sql
+-- Q4: 단일 날짜 COUNT
+SELECT count(*)
+FROM loan
+WHERE dt = '2026-03-01'
+```
+→ Before: 826ms / After: 560ms (**-32%**)
+
+| 쿼리 | Before (45,008 files) | After (310 files) | 개선 |
+|------|----------------------|-------------------|------|
+| Q1. COUNT(*) 전체 | 4,542ms | 1,403ms | **-69%** |
+| Q2. COUNT + 필터 | 2,138ms | 1,041ms | **-51%** |
+| Q3. GROUP BY 집계 | 2,752ms | 1,243ms | **-55%** |
+| Q4. 단일 날짜 COUNT | 826ms | 560ms | **-32%** |
+
+전체 스캔, 필터, 집계 쿼리 전반에서 **32~69% 성능 개선**이 확인되었습니다. 스캔해야 할 데이터 총량은 동일하지만, 파일을 여는 오버헤드만으로 이 정도 차이가 발생합니다.
 
 ---
 
