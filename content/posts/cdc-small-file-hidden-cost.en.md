@@ -169,14 +169,28 @@ We also backfilled 520 days of historical data. 31.4 million files were reduced 
 | Average file size | 335 KB | varies by partition | |
 | Compaction target size | - | 128 MB | |
 
-Compaction impact (Storage Class Analysis):
+As compaction progressed, Requests/GB (requests per data retrieved) steadily decreased. This means the same amount of data could be read with fewer requests — the most direct measure of compaction effectiveness (Storage Class Analysis):
+
+| Date | Requests | Data Retrieved | Requests/GB | Compaction Status |
+|------|----------|----------------|-------------|-------------------|
+| 6/5 | 749.1M | 124,013 GB | 6,041 | Manual test (dt=6/5, 6/6 only) |
+| 6/6 | 722.4M | 120,199 GB | 6,010 | 〃 |
+| 6/7 | 724.0M | 120,407 GB | 6,013 | 〃 |
+| 6/8 | 709.8M | 118,313 GB | 5,999 | Backfill started (6/4→descending) |
+| 6/9 | 596.5M | 104,129 GB | 5,729 | Backfill in progress |
+| 6/10 | 271.1M | 57,482 GB | 4,717 | Backfill complete |
+
+Requests/GB dropped from 6,041 to 4,717 — a **22% reduction** in the number of requests needed to read the same amount of data.
+
+Since daily data retrieval varies, we normalized to the same retrieval volume (100,000GB) to compare costs:
 
 | Metric | Before (6/5~6/8 avg) | After (6/10) | Change |
 |------|---------------------|-------------|------|
-| Request count | 718M/day | 254M/day | -65% |
-| Request cost (est.) | ~$8,600/month | ~$3,000/month | **-$5,600/month** |
+| Requests/GB | 6,041 | 4,717 | -22% |
+| Requests per 100TB | 604.1M | 471.7M | -22% |
+| Monthly request cost (est.) | ~$7,250/month | ~$5,660/month | **-$1,590/month** |
 
-We compared request trends for the same prefix before and after compaction. Query volume fluctuations may exist, so these figures don't map 1:1 to actual billing.
+> Cost calculation: requests × 30 days × $0.0004/1,000 (ap-south-1). Actual query volume may fluctuate, so these figures don't map 1:1 to billing.
 
 Daily compaction now runs automatically on the previous day's partitions, preventing small files from accumulating again.
 
