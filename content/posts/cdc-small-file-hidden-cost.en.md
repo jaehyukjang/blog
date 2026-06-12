@@ -173,9 +173,9 @@ As compaction progressed, Requests/GB (requests per data retrieved) steadily dec
 
 | Date | Requests | Data Retrieved | Requests/GB | Compaction Status |
 |------|----------|----------------|-------------|-------------------|
-| 6/5 | 749.1M | 124,013 GB | 6,041 | Manual test (dt=6/5, 6/6 only) |
-| 6/6 | 722.4M | 120,199 GB | 6,010 | 〃 |
-| 6/7 | 724.0M | 120,407 GB | 6,013 | 〃 |
+| 6/5 | 749.1M | 124,013 GB | 6,041 | |
+| 6/6 | 722.4M | 120,199 GB | 6,010 | |
+| 6/7 | 724.0M | 120,407 GB | 6,013 | |
 | 6/8 | 709.8M | 118,313 GB | 5,999 | Backfill started (66/520) |
 | 6/9 | 596.5M | 104,129 GB | 5,729 | Backfill in progress (213/520) |
 | 6/10 | 271.1M | 57,482 GB | 4,717 | Backfill in progress (427/520) |
