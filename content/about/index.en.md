@@ -9,6 +9,14 @@ I build and operate data platforms at a fintech company in India. I mostly work 
 
 This is where I write about things I learn along the way.
 
+## Tech Stack
+
+- **Processing:** Spark, Flink, dbt
+- **Streaming & CDC:** Debezium, Kafka, Kinesis, NiFi
+- **Storage:** S3, Athena, Iceberg
+- **Orchestration:** Airflow
+- **Cloud:** AWS
+
 ## Writing
 
 - [How CDC Changes Data Platforms: CDC-based Incremental Replication](https://blog.afinit.com/cdc-incremental-replication)
