@@ -179,17 +179,17 @@ As compaction progressed, Requests/GB (requests per data retrieved) steadily dec
 | 6/8 | 709.8M | 118,313 GB | 5,999 | Backfill started (66/520) |
 | 6/9 | 596.5M | 104,129 GB | 5,729 | Backfill in progress (213/520) |
 | 6/10 | 271.1M | 57,482 GB | 4,717 | Backfill in progress (427/520) |
-| 6/11 | - | - | - | Backfill complete (520/520) |
+| 6/11 | 34.1M | 19,708 GB | 1,731 | Backfill complete (520/520) |
 
-Requests/GB dropped from 6,041 to 4,717 — a **22% reduction** in the number of requests needed to read the same amount of data.
+The 6/10 figures still include PUT requests from the ongoing backfill. 6/11 is the first clean post-backfill day — Requests/GB dropped from 6,016 to 1,731, a **71% reduction** in the number of requests needed to read the same amount of data.
 
 Since daily data retrieval varies, we normalized to the same retrieval volume (100,000GB) to compare costs:
 
-| Metric | Before (6/5~6/8 avg) | After (6/10) | Change |
+| Metric | Before (6/5~6/8 avg) | After (6/11) | Change |
 |------|---------------------|-------------|------|
-| Requests/GB | 6,016 | 4,717 | -22% |
-| Requests per 100TB | 601.6M | 471.7M | -22% |
-| Monthly request cost (est.) | ~$7,220/month | ~$5,660/month | **-$1,560/month** |
+| Requests/GB | 6,016 | 1,731 | -71% |
+| Requests per 100TB | 601.6M | 173.1M | -71% |
+| Monthly request cost (est.) | ~$7,220/month | ~$2,080/month | **-$5,140/month** |
 
 > Cost calculation: requests × 30 days × $0.0004/1,000 (ap-south-1). Actual query volume may fluctuate, so these figures don't map 1:1 to billing.
 
