@@ -9,6 +9,14 @@ layout: "single"
 
 운영하면서 배운 것들을 틈틈이 기록해보려 합니다.
 
+## Tech Stack
+
+- **Processing:** Spark, Flink, dbt
+- **Streaming & CDC:** Debezium, Kafka, Kinesis, NiFi
+- **Storage:** S3, Athena, Iceberg
+- **Orchestration:** Airflow
+- **Cloud:** AWS
+
 ## Writing
 
 - [CDC가 데이터 플랫폼을 바꾸는 방식: CDC-based Incremental Replication](https://blog.afinit.com/cdc-incremental-replication)
