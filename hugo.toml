@@ -40,7 +40,7 @@ defaultContentLanguage = "ko"
     weight = 1
     [languages.ko.params.homeInfoParams]
       Title = "Backpressured"
-      Content = "Senior Data Engineer — Spark, Flink, Iceberg, CDC, Airflow, dbt"
+      Content = "Slowly draining the backlog"
     [[languages.ko.menu.main]]
       identifier = "posts"
       name = "Posts"
@@ -63,7 +63,7 @@ defaultContentLanguage = "ko"
     weight = 2
     [languages.en.params.homeInfoParams]
       Title = "Backpressured"
-      Content = "Senior Data Engineer — Spark, Flink, Iceberg, CDC, Airflow, dbt"
+      Content = "Slowly draining the backlog"
     [[languages.en.menu.main]]
       identifier = "posts"
       name = "Posts"
