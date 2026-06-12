@@ -6,10 +6,29 @@
   margin-top: 0;
 }
 
-/* Limit cover image height on home page */
-.entry .entry-cover img {
-  max-height: 160px;
+/* Small thumbnail on home page */
+.post-entry {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+.post-entry .entry-cover {
+  flex-shrink: 0;
+  width: 120px;
+  height: 80px;
+  order: -1;
+  margin: 0;
+}
+.post-entry .entry-cover img {
+  width: 120px;
+  height: 80px;
   object-fit: cover;
+  border-radius: 8px;
+}
+.post-entry .entry-header,
+.post-entry .entry-content {
+  flex: 1;
 }
 
 /* Table header styling */
