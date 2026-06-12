@@ -1,3 +1,11 @@
+/* Reduce gap between home info and post list */
+.home-info {
+  margin-bottom: 0;
+}
+.first-entry {
+  margin-top: 16px;
+}
+
 /* Table header styling */
 .post-content table thead th {
   background-color: rgba(128, 128, 128, 0.15);
