@@ -6,6 +6,12 @@
   margin-top: 0;
 }
 
+/* Limit cover image height on home page */
+.entry .entry-cover img {
+  max-height: 250px;
+  object-fit: cover;
+}
+
 /* Table header styling */
 .post-content table thead th {
   background-color: rgba(128, 128, 128, 0.15);
