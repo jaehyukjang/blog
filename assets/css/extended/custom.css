@@ -8,7 +8,7 @@
 
 /* Limit cover image height on home page */
 .entry .entry-cover img {
-  max-height: 250px;
+  max-height: 160px;
   object-fit: cover;
 }
 
