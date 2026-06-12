@@ -67,17 +67,17 @@ defaultContentLanguage = "ko"
     [[languages.en.menu.main]]
       identifier = "posts"
       name = "Posts"
-      url = "/en/posts/"
+      url = "/posts/"
       weight = 1
     [[languages.en.menu.main]]
       identifier = "tags"
       name = "Tags"
-      url = "/en/tags/"
+      url = "/tags/"
       weight = 2
     [[languages.en.menu.main]]
       identifier = "about"
       name = "About"
-      url = "/en/about/"
+      url = "/about/"
       weight = 3
 
 [taxonomies]
