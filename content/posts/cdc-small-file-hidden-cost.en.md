@@ -186,9 +186,9 @@ Since daily data retrieval varies, we normalized to the same retrieval volume (1
 
 | Metric | Before (6/5~6/8 avg) | After (6/10) | Change |
 |------|---------------------|-------------|------|
-| Requests/GB | 6,041 | 4,717 | -22% |
-| Requests per 100TB | 604.1M | 471.7M | -22% |
-| Monthly request cost (est.) | ~$7,250/month | ~$5,660/month | **-$1,590/month** |
+| Requests/GB | 6,016 | 4,717 | -22% |
+| Requests per 100TB | 601.6M | 471.7M | -22% |
+| Monthly request cost (est.) | ~$7,220/month | ~$5,660/month | **-$1,560/month** |
 
 > Cost calculation: requests × 30 days × $0.0004/1,000 (ap-south-1). Actual query volume may fluctuate, so these figures don't map 1:1 to billing.
 
