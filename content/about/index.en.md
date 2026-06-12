@@ -13,9 +13,12 @@ This is where I write about things I learn along the way.
 
 - **Processing:** Spark, Flink, dbt
 - **Streaming & CDC:** Debezium, Kafka, Kinesis, NiFi
-- **Storage:** S3, Athena, Iceberg
+- **Storage & DW:** S3, Athena, Iceberg, DynamoDB
 - **Orchestration:** Airflow
+- **DevOps & Infra:** Docker, Jenkins, SAM, CloudFormation, Lake Formation
+- **Monitoring:** Prometheus, Grafana, CloudWatch, Kibana
 - **Cloud:** AWS
+- **Languages:** Python, SQL
 
 ## Writing
 
