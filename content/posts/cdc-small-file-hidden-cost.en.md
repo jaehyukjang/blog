@@ -4,6 +4,10 @@ date: 2026-06-11
 draft: false
 tags: ["cdc", "s3", "cost-optimization", "debezium", "flink"]
 description: "Athena cost isn't just about data scanned. Learn how millions of small files from CDC pipelines silently drain your S3 request budget and degrade query performance — and how we fixed it."
+cover:
+  image: "/blog/images/cdc-small-file-cover.png"
+  alt: "CDC Small File Problem"
+  relative: false
 ---
 
 In [Why We Redesigned Our CDC Pipeline with Debezium and Flink](https://blog.afinit.com/cdc-pipeline-debezium-flink), we introduced our Debezium + Flink-based CDC pipeline. Debezium captures database changes, routes them through Kafka, and Flink writes Parquet files to S3 every 5 minutes.

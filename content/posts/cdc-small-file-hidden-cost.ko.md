@@ -4,6 +4,10 @@ date: 2026-06-11
 draft: false
 tags: ["cdc", "s3", "cost-optimization", "debezium", "flink"]
 description: "Athena 비용은 스캔량이 전부가 아닙니다. CDC 파이프라인이 만든 수백만 개의 Small File이 S3 Request 비용과 쿼리 성능을 어떻게 잠식하는지, 그리고 어떻게 해결했는지를 공유합니다."
+cover:
+  image: "/blog/images/cdc-small-file-cover.png"
+  alt: "CDC Small File Problem"
+  relative: false
 ---
 
 [CDC 파이프라인을 Debezium과 Flink로 재설계한 이유](https://blog.afinit.com/cdc-pipeline-debezium-flink)에서 Debezium + Flink 기반 CDC 파이프라인을 소개했습니다. Debezium이 DB 변경분을 캡처하고, Kafka를 거쳐, Flink가 5분마다 S3에 Parquet 파일로 저장하는 구조입니다.
