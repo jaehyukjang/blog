@@ -5,14 +5,14 @@ draft: false
 tags: ["cdc", "s3", "cost-optimization", "debezium", "flink"]
 description: "Athena 비용은 스캔량이 전부가 아닙니다. CDC 파이프라인이 만든 수백만 개의 Small File이 S3 Request 비용과 쿼리 성능을 어떻게 잠식하는지, 그리고 어떻게 해결했는지를 공유합니다."
 cover:
-  image: "/blog/images/cdc-small-file-cover.png"
+  image: "/images/cdc-small-file-cover.png"
   alt: "CDC Small File Problem"
   relative: false
 ---
 
 [CDC 파이프라인을 Debezium과 Flink로 재설계한 이유](https://blog.afinit.com/cdc-pipeline-debezium-flink)에서 Debezium + Flink 기반 CDC 파이프라인을 소개했습니다. Debezium이 DB 변경분을 캡처하고, Kafka를 거쳐, Flink가 5분마다 S3에 Parquet 파일로 저장하는 구조입니다.
 
-![CDC Pipeline Architecture](/blog/images/cdc-pipeline-architecture.png)
+![CDC Pipeline Architecture](/images/cdc-pipeline-architecture.png)
 
 파이프라인은 1년 넘게 잘 동작했습니다. 데이터 정합성도 검증됐고, 운영도 안정적이었습니다. 문제는 데이터 플랫폼 TCO 분석을 하면서 S3 비용을 뜯어보기 전까지는 보이지 않았습니다.
 
@@ -34,7 +34,7 @@ AWS에서 Athena를 쓰는 팀이라면 대부분 이렇게 알고 있습니다:
 
 저희 데이터 플랫폼의 S3 비용을 API operation별로 뜯어봤습니다:
 
-![S3 Monthly Cost: Storage vs GetObject](/blog/images/s3-cost-storage-vs-get.png)
+![S3 Monthly Cost: Storage vs GetObject](/images/s3-cost-storage-vs-get.png)
 
 | 월 | Storage | GetObject | 총 비용 | GET 비율 |
 |---|---------|-----------|---------|---------|
