@@ -1,6 +1,8 @@
 ---
 title: "About"
 layout: "single"
+ShowToc: false
+comments: false
 ---
 
 안녕하세요, 장재혁입니다.
