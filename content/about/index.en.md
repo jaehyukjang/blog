@@ -1,6 +1,8 @@
 ---
 title: "About"
 layout: "single"
+ShowToc: false
+comments: false
 ---
 
 Hi, I'm Jaehyuk.
