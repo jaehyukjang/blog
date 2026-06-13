@@ -5,14 +5,14 @@ draft: false
 tags: ["cdc", "s3", "cost-optimization", "debezium", "flink"]
 description: "Athena cost isn't just about data scanned. Learn how millions of small files from CDC pipelines silently drain your S3 request budget and degrade query performance — and how we fixed it."
 cover:
-  image: "/blog/images/cdc-small-file-cover.png"
+  image: "/images/cdc-small-file-cover.png"
   alt: "CDC Small File Problem"
   relative: false
 ---
 
 In [Why We Redesigned Our CDC Pipeline with Debezium and Flink](https://blog.afinit.com/cdc-pipeline-debezium-flink), we introduced our Debezium + Flink-based CDC pipeline. Debezium captures database changes, routes them through Kafka, and Flink writes Parquet files to S3 every 5 minutes.
 
-![CDC Pipeline Architecture](/blog/images/cdc-pipeline-architecture.png)
+![CDC Pipeline Architecture](/images/cdc-pipeline-architecture.png)
 
 The pipeline worked well for over a year. Data consistency was verified, and operations were stable. The problem remained invisible until we dug into our S3 costs as part of a data platform TCO analysis.
 
@@ -34,7 +34,7 @@ Among these, GET requests scale proportionally with the number of files. LIST op
 
 We broke down our data platform's S3 costs by API operation:
 
-![S3 Monthly Cost: Storage vs GetObject](/blog/images/s3-cost-storage-vs-get.png)
+![S3 Monthly Cost: Storage vs GetObject](/images/s3-cost-storage-vs-get.png)
 
 | Month | Storage | GetObject | Total | GET % |
 |---|---------|-----------|---------|---------|
