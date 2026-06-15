@@ -183,7 +183,7 @@ As compaction progressed, Requests/GB (requests per data retrieved) steadily dec
 | 6/12 | 22.4M | 17,296 GB | 1,298 | Stabilized |
 | 6/13 | 22.4M | 17,515 GB | 1,282 | Stabilized |
 
-The 6/10 figures still include PUT requests from the ongoing backfill. After 6/11 (first clean post-backfill day), the numbers stabilized by 6/12~13 — Requests/GB dropped from 6,016 to 1,282, a **79% reduction** in the number of requests needed to read the same amount of data.
+The figures up to 6/11 still include PUT requests from the backfill. 6/12 is the first fully clean post-backfill day, and the numbers stabilized by 6/12~13 — Requests/GB dropped from 6,016 to 1,282, a **79% reduction** in the number of requests needed to read the same amount of data.
 
 Since daily data retrieval varies, we normalized to the same retrieval volume (100,000GB) to compare costs:
 
