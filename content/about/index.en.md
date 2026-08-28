@@ -24,6 +24,7 @@ This is where I write about things I learn along the way.
 
 ## Writing
 
+- [Three Questions on the Way to an AI-Ready Data Platform](https://blog.afinit.com/ai-ready-data-platform)
 - [How CDC Changes Data Platforms: CDC-based Incremental Replication](https://blog.afinit.com/cdc-incremental-replication)
 - [Why We Redesigned Our CDC Pipeline with Debezium and Flink](https://blog.afinit.com/cdc-pipeline-debezium-flink)
 - [From NiFi to Apache Flink: Improving a Real-time SMS Pipeline](https://blog.afinit.com/nifi-apache-flink-sms-pipeline)

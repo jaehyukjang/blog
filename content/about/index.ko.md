@@ -24,6 +24,7 @@ comments: false
 
 ## Writing
 
+- [AI-Ready Data Platform으로 가는 세 가지 질문](https://blog.afinit.com/ai-ready-data-platform)
 - [CDC가 데이터 플랫폼을 바꾸는 방식: CDC-based Incremental Replication](https://blog.afinit.com/cdc-incremental-replication)
 - [CDC 파이프라인을 Debezium과 Flink로 재설계한 이유](https://blog.afinit.com/cdc-pipeline-debezium-flink)
 - [NiFi에서 Apache Flink로, 실시간 SMS 파이프라인 개선기](https://blog.afinit.com/nifi-apache-flink-sms-pipeline)
