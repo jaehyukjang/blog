@@ -50,16 +50,16 @@
 
 ### 1편 — CDC가 에러 없이 틀리는 순간들 (Data Correctness)
 
-- **중심 문장 (확정)**: **"CDC는 소스를 그대로 복제하지 않는다. 중요한 건 데이터를 옮기는 게 아니라 원본의 *의미*를 그대로 옮기는 것이다."**
-  - 개인 블로그 톤: "처음에는 CDC를 소스의 변경사항을 그대로 전달하는 파이프라인이라고 생각했다. 그런데 운영해보니 문제는 '전달됐느냐'보다 '같은 의미로 전달됐느냐'에 더 가까웠다."
-  - 한 줄 요약: "CDC는 복제가 아니라 해석에 가깝다"
-  - ⚠️ "최종 테이블이 맞다고 CDC가 맞는 건 아니다"는 **1편 전체 결론 아님** → 사건 8의 punchline으로만 씀 (사건 1·2는 최종 테이블 자체가 틀리는 케이스라 그 문장이 안 맞음)
+- **중심 문장 (확정, 담백하게)**: **"CDC는 DB의 변경사항을 그냥 복사해주는 게 아니다. 잘 흘러간다고 데이터까지 맞는 건 아니다."**
+  - 개인 블로그 톤: "처음에는 CDC를 소스의 변경사항을 그대로 전달하는 파이프라인이라고 생각했다. 그런데 운영해보니, 파이프라인이 잘 도는 것과 원본과 같은 데이터가 만들어지는 것은 다른 문제였다."
+  - ⚠️ 추상어(의미 보존/경계) 전면에 내세우지 말 것. "잘 흘러간다고 데이터까지 맞는 건 아니다"가 진짜 메시지
+  - ⚠️ "최종 테이블이 맞다고 CDC가 맞는 건 아니다"는 **1편 전체 결론 아님** (사건 1·2는 최종까지 틀림). 사건 8에서도 "MERGE가 가려주니 최종은 안전"으로 좁히지 말 것 — 경계/순서가 꼬이면 **최종 상태까지 어긋날 수 있음**
 - 제목 후보: **"CDC는 소스를 그대로 복제하지 않는다"** (결론과 가장 잘 맞음) / "Debezium CDC 운영기 1 — 에러 없이 데이터가 틀리는 순간들"
-- **사건 = 서로 다른 "경계"에서 의미가 깨지는 사례 (점점 뒤 계층으로):**
-  1. **사건 1 datetime(6) — 타입 표현 경계**: 같은 int64여도 논리 타입(MicroTimestamp)에 따라 millis/micros로 **단위라는 의미가 갈림** → "타입이 맞다 ≠ 의미가 맞다"
-  2. **사건 2 INSTANT ADD COLUMN — DB저장/binlog 경계**: MySQL로 조회되는 값(가상 default)과 실제 row/binlog가 가진 정보가 달라, **소스 상태를 CDC가 그대로 표현 못 함** (NULL이 0으로). + tinyint converter 오인 디버깅 반전
-  3. **사건 8 snapshot locking — snapshot/downstream 경계**: 하나의 상태가 중복 이벤트로 표현되고, downstream MERGE가 그걸 가려버림. **"더 까다로운 경우 — 최종 테이블은 맞는데 raw CDC는 틀린 경우"** ← 사건 8 punchline (앞 두 사건에서 "CDC가 틀리는구나" 하다가 마지막 반전). ※ 기존 B축 분류에서 1편으로 이동
-- **결론 (세 사건 관통)**: "CDC 정합성은 '데이터가 전달됐는가'가 아니라 '소스의 의미가 각 경계(타입 표현 → binlog → snapshot/downstream)를 지나면서 보존됐는가'의 문제다" = 회사 Incremental Replication 글(방어적 정합성)의 **"왜 그런 검증이 필요했나"를 실제 사고로 보여주는** 후속
+- **사건 (타입 해석 → DB 저장방식 → snapshot 경계 순으로, 최종 데이터까지 달라질 수 있음):**
+  1. **사건 1 datetime(6) — 값을 받았는데 단위를 잘못 해석**: 같은 int64여도 논리 타입(MicroTimestamp)에 따라 millis/micros로 단위가 갈림 → 잘못 해석하면 값이 1000배 틀림
+  2. **사건 2 INSTANT ADD COLUMN — DB에서 보이는 상태와 CDC가 얻을 수 있는 정보가 다름**: MySQL 조회값(가상 default)과 실제 binlog가 가진 정보가 달라 **값 자체가 다르게 들어옴** (NULL이 0으로). + tinyint converter 오인 디버깅 반전
+  3. **사건 8 snapshot locking — snapshot과 streaming 경계가 깔끔하지 않으면**: 같은 row가 중복/순서 꼬인 이벤트로 들어옴. 그 영향이 raw뿐 아니라 **downstream merge 결과(최종 상태)까지** 이어질 수 있음. 핵심은 중복 자체보다 **"어떤 이벤트가 최종값으로 선택되느냐"** — snapshot의 옛 상태와 streaming의 새 상태가 함께 들어왔을 때 순서 판단이 틀리면 오래된 값이 최종이 될 수도. (※ 현재 우리 구현은 hash MERGE로 흡수하지만, "MERGE가 있으니 안전"은 일반화하면 안 됨). 기존 B축 분류에서 1편으로 이동
+- **결론 (세 사건 관통, 담백)**: "CDC를 운영하면서 중요했던 건 파이프라인이 잘 도는지가 아니라, 실제로 원본과 같은 데이터가 만들어지고 있는지를 계속 확인하는 일이었다" = 회사 Incremental Replication 글(방어적 정합성)의 **"왜 그런 검증이 필요했나"를 실제 사고로 보여주는** 후속
 
 ### 2편 — 커넥터는 생각대로 움직이지 않는다 (Operational Semantics)
 
@@ -114,51 +114,50 @@
 
 ---
 
-### 사건 2 — NULL이 default로 채워진다: MySQL INSTANT ADD COLUMN × CDC (DFM-1482 디버깅 계열)
+### 사건 2 — DB엔 NULL인데 CDC엔 0: nullable + DEFAULT 컬럼의 직렬화 함정 (DFM-1105/1482)
 
-> ⚠️ 이건 "tinyint 문제"가 **아님**. tinyint는 우연히 걸린 예시 컬럼일 뿐, **타입과 무관**한
-> 스키마 진화 함정. Notion에도 "converter/tinyInt1isBit와 상관없이"라고 명시돼 있었음.
+> ⚠️⚠️ 2026-09-01 전면 재검증. 이전에 INSTANT ADD COLUMN이 원인이라 단정했으나 **틀렸음.**
+> 실제 슬랙 스레드(p1754621186) + prod DB 확인 결과, INSTANT 아님. 진짜는 **converter/직렬화 계층의 default 처리**.
 
-**현상**
-- `tc_loan.is_ivr_required`, `is_fv_required` 값이 소스와 CDC에서 불일치
-- 소스에선 특정 로우가 `NULL`인데, CDC 스트림엔 `0`(= 컬럼 DEFAULT)으로 들어옴
+**현상 (검증됨)**
+- `tc_loan.is_ivr_required`, `is_fv_required`: 앱이 안 쓰는 필드(2021년 추가), `tinyint DEFAULT 0`, nullable
+- 앱이 값을 안 넣어 **DB엔 실제 NULL 저장** → **sqoop(SELECT)로는 NULL 그대로** 나옴
+- 근데 **CDC(Debezium)로는 0**(= 스키마 DEFAULT)으로 들어옴 → sqoop NULL vs CDC 0 불일치 → tx v2(CDC 기반) 정합성 깨짐
 
-**오인했던 범인 (디버깅 반전 서사)**
-- 처음엔 `TinyIntOneToBooleanConverter` + `database.tinyInt1isBit` 설정 의심
-- 3가지 조합 실험: ① converter 유지+tinyInt1isBit ② converter 삭제+tinyInt1isBit ③ converter 삭제
-- → **셋 다 무관.** 진짜 원인은 converter가 아니었음
+**오인했던 범인들 (디버깅 반전 서사 — 둘 다 틀림)**
+1. 처음: `TinyIntOneToBooleanConverter` + `database.tinyInt1isBit` 의심 → 3조합 실험 → **셋 다 무관** (Notion)
+2. 그다음(이 노트 이전 버전): MySQL INSTANT ADD COLUMN 의심 → **이것도 틀림**
+   - 반증: INSTANT면 SELECT도 가상 default(0)가 나와야 하는데, **소스 SELECT는 NULL**이었음 (모순)
+   - prod 확인: 컬럼은 2021년 추가된 평범한 컬럼, 실제 NULL이 물리 저장됨, `binlog_row_image=FULL`이라 binlog에 NULL도 실림
 
-**진짜 원인 (MySQL 8.0 INSTANT ADD COLUMN)**
-- `ALTER TABLE ADD COLUMN ... DEFAULT 0`을 INSTANT 알고리즘으로 처리하면:
-  - 기존 로우를 **물리적으로 다시 쓰지 않음.** default 값은 data dictionary(메타데이터)에만 저장
-  - 기존 로우를 읽으면 MySQL이 "이 로우엔 그 컬럼 없음 → default 반환" (가상 채움)
-  - 그 로우가 이후 실제 UPDATE되기 전까지 물리적으로 default가 안 박힘
-- → **default가 정의된 채 추가된 컬럼 + 그 후 UPDATE 안 된 기존 로우** = CDC엔 실제값(NULL) 대신 default(0)가 실림
-- tinyint든 int든 무관. nullable + DEFAULT 조합이면 다 발생 가능
+**진짜 원인 (검증됨) — nullable + DEFAULT 컬럼의 직렬화 계층 default 처리**
+- 알려진 이슈: **nullable 컬럼에 default가 정의돼 있으면, NULL 값이 이벤트에 default로 실린다**
+- 근본은 **Debezium 자체가 아니라 Kafka Converter(Avro/Connect 직렬화)** — Avro/Connect 스키마에서 "optional 필드 + default value" 조합이면, NULL을 직렬화할 때 default로 대체
+- Debezium은 0.9.0.CR1(2019, DBZ-1064)에서 이 방향을 고쳤으나, converter 계층에서 여전히 재발 (schema-registry #2314, kafka-connect-storage #716). `value.converter.ignore.default.for.nullables=true`로도 완전히 안 잡히는 경우 있음
+- 우리 사건 인과: DEFAULT 0 정의 → 스키마가 "optional+default=0" → binlog의 NULL을 직렬화 시 0으로 대체 → CDC에 0
 
-**우리 해결**
-- converter를 만지는 게 아니라 → **DB에서 해당 컬럼 DEFAULT를 NULL로 변경** → CDC에도 NULL로 정상 유입
-- (Notion 슬랙 p1754900820161439)
-- 소비자(Flink) 측은 정상: `SchemaGenerator.scala` L56-62 = 값이 null이면 그대로 null 세팅, tinyint는 nullable int로 매핑(L182). 즉 0으로 바꾼 주체는 소비자가 아니라 CDC 생성 지점
+**검증 근거 (prod, 2026-09-01)**
+- MySQL 8.4.10 (사건 당시 8.0.41 — DPM-2450: "8.0.41→8.4 upgrade"가 2025-12 시작이므로 사건 2025-08엔 8.0.41. 5.7 아님)
+- `binlog_row_image=FULL`, `binlog_format=ROW` → binlog에 NULL 실제로 있음 (값이 없어서가 아님)
+- 컬럼 순서: `is_ivr_required`(32)/`is_fv_required`(35)가 created_at(30)/updated_at(31)보다 뒤 = 나중에 ADD됨
+- 지금 DEFAULT는 NULL (해결 적용됨), 실제 NULL 로우 실재
 
-**공식/업계 해결법 조사 (2026-08-31) — 완전한 공식 해결책은 "없음" (MySQL 레벨 한계)**
-- 근본 이유: INSTANT ADD COLUMN은 기존 로우를 물리적으로 안 씀 → **binlog에 그 값 자체가 없음** → CDC 도구가 아무리 잘 읽어도 읽을 값이 없음
-- `binlog_row_image=FULL` 켜도 **해결 안 됨** (FULL=있는 값 다 담기지, 없는 값 만들기가 아님)
-- **Debezium만의 문제 아님** — Airbyte 동일 이슈(airbytehq/airbyte#28968: "cdc replaces null value with the default value of that column"). CDC 도구 공통, 툴 레벨에서 못 고침
-- 업계 대응책 (전부 우회, 정공법 없음):
-  1. **Re-snapshot** — 현재 상태 재적재. 비용 큼, 중간 이력 손실
-  2. **기존 로우 물리 UPDATE** (`UPDATE t SET col=col`) → 이후 binlog에 실값. 대량이면 사실상 재작성
-  3. **DEFAULT 안 쓰기 (예방)** ← 우리가 한 것(default를 NULL로). 커뮤니티 권장 예방 정석
-  4. **소비자에서 보정** — 스키마 자동감지 + `_row_hash` 재계산 (← 우리 사건6 방향)
-- → 우리 선택(3번, DEFAULT를 NULL로 예방)이 **우회가 아니라 실무 표준에 가까움.** re-snapshot/강제 UPDATE는 문제 터진 뒤 무거운 복구책
+**우리 해결 (2갈래)**
+1. 소스: **DEFAULT를 NULL로 변경** (tc_loan, m_loan) → 스키마에 default가 없어짐 → converter가 채울 게 없어 NULL 유지. 단 기존 값은 안 바뀜 (인프라팀 U01C6FXSZ2N 확인)
+2. 소비자: db-streamer `jobs/initial_snapshot.py`의 `zero_if_null` normalize → sqoop 초기 스냅샷(NULL)을 0으로 맞춰 CDC(0)와 일치시킴 (양쪽 통일)
+
+**"나만의 실수 아님" 근거 (블로그 훅)**
+- Airbyte 동일 이슈: airbytehq/airbyte#28968 ("cdc replaces null value with the default value of that column") — CDC 도구 공통
+- confluentinc/schema-registry#2314, kafka-connect-storage-cloud#716 — converter 계층 이슈로 등록
+- Debezium이 2019년 고쳤는데도 직렬화 계층에서 재발 = 유명한 함정
 
 **교훈 (블로그 앵글)**
-- "nullable + DEFAULT가 함께 정의된 컬럼"은 CDC에서 위험. 실제 NULL이 default로 은폐됨
-- 타입 문제로 보이지만 실은 **스키마 설계(INSTANT ADD COLUMN) × CDC 동작**의 문제
-- 소스에서 `SELECT`해도 가상 default라 진짜 저장 상태가 안 보이는 게 디버깅을 어렵게 함
-- ⭐ 강한 훅: "Debezium 버그도 내 실수도 아니다 — MySQL 레벨 한계라 어떤 CDC 도구도 못 고치고(Airbyte 동일), `binlog_row_image=FULL`로도 안 됨. 'DEFAULT 있는 nullable 컬럼을 추가하지 않는다'는 스키마 규칙이 유일한 근본 예방"
+- "nullable + DEFAULT가 함께 정의된 컬럼"은 CDC에서 위험 — 실제 NULL이 직렬화 시 default로 은폐됨
+- 겉보기엔 타입/컨버터 문제 같지만 실은 **스키마의 optional+default 조합 × 직렬화 계층** 문제
+- sqoop(SELECT)은 NULL 그대로, CDC(Debezium→converter)만 0 → **두 경로가 같은 값을 다르게 표현**하는 게 디버깅을 어렵게 함
+- ⭐ 훅: "SELECT하면 NULL인데 CDC엔 0. binlog엔 NULL이 실려 있는데도(FULL) 0으로 바뀐다. 범인은 Debezium이 아니라 그 뒤 직렬화 계층이었다"
 
-**Refs**: Notion "Fix CDC tinyint null issue" (DESCRIBE/tx-vs-cdc 비교/3조합 실험/최종해결) · MySQL 8.0 INSTANT ADD COLUMN (dev.mysql.com, blogs.oracle.com) · airbytehq/airbyte#28968 (동일 이슈, 타 CDC 도구) · jet-flink `SchemaGenerator.scala` L56-62/L182
+**Refs**: 슬랙 스레드 CMH626FV2/p1754621186 (앱팀: 2021년 추가·안 쓰는 필드·NULL 저장 / 본인: "CDC에서 자동 default 0" / 인프라팀: default→NULL 변경, 기존값 유지) · Notion "Fix CDC tinyint null issue" (3조합 실험) · prod DB 2026-09-01 (버전/binlog_row_image=FULL/컬럼순서) · DPM-2450 (MySQL 버전 타임라인) · Airbyte#28968 · schema-registry#2314 · db-streamer `jobs/initial_snapshot.py` (zero_if_null)
 
 ---
 
@@ -341,11 +340,12 @@ internal schema size 15, but row size 16, restart connector with schema recovery
 
 - `none`의 함정: 락이 없으면 스냅샷 경계가 흐려짐 → 스냅샷 도중 바뀐 로우가 `read`(스냅샷)로도 `insert`(라이브 CDC)로도 둘 다 나옴 = **같은 로우 중복(r/i duplicate)**
 
-**왜 중요한가 — raw 레이어엔 중복이 남는다 ⭐ (핵심 반전)**
-- db-streamer의 **Iceberg MERGE는 이 중복을 흡수**함 (최종 상태 정확) → 여기까지만 보면 문제없어 보임
-- **BUT raw `{schema}_changes/` 파일엔 중복이 그대로 남음**. `dataflow`의 `daily_compact_changes`가 full-row `dropDuplicates()`를 쓰는데, `r` 로우와 `i` 로우는 `binlog_type`/`binlog_timestamp`가 달라서 → 같은 로우인데도 dedup 안 됨
-- → raw `_changes`를 **직접 읽는 소비자**(예: data-delivery-man)는 중복을 보게 됨
-- 즉 "MERGE가 흡수하니 괜찮겠지"가 함정. raw 직접 읽는 소비자에겐 새어나감
+**왜 중요한가 — 영향이 raw뿐 아니라 최종 상태까지 갈 수 있다 ⭐ (핵심)**
+- 현재 우리 구현: db-streamer의 **hash MERGE가 r/i 중복을 흡수** (우리 케이스 최종 상태는 정확). 하지만 **"MERGE가 있으니 최종은 안전"으로 일반화하면 안 됨**
+- 진짜 문제는 중복 자체보다 **"어떤 이벤트가 최종값으로 선택되느냐"(순서/reconciliation)**:
+  - snapshot의 옛 상태(`read`)와 streaming의 새 상태(`insert`/`update`)가 함께 들어왔을 때, downstream이 순서를 제대로 판단 못 하면 → **오래된 상태가 최종값이 될 수도** (merge 방식에 따라 최종 상태까지 어긋남)
+- **raw 레이어엔 중복이 그대로 남음**: `dataflow`의 `daily_compact_changes`가 full-row `dropDuplicates()`를 쓰는데, `r` 로우와 `i` 로우는 `binlog_type`/`binlog_timestamp`가 달라서 → 같은 로우인데도 dedup 안 됨 → raw `_changes`를 **직접 읽는 소비자**(예: data-delivery-man)는 중복을 봄
+- 즉: raw까지 새어나가고(직접 소비자), merge 방식에 따라 최종 상태까지 갈 수 있는 문제
 
 **해결 (실제 — 로그 08-25)**
 - 임시 스냅샷 커넥터를 `locking.mode=minimal`로 재배포 → r/i 중복 없이 raw까지 깨끗
