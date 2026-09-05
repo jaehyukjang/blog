@@ -47,10 +47,10 @@ Kafka로 넘어온 메시지의 스키마를 열어보니 이렇게 생겨 있�
 
 | MySQL 타입 | Debezium 논리 타입 (`name`) | 물리 타입 (`type`) | 단위 |
 |---|---|---|---|
-| `DATETIME` ~ `DATETIME(3)` | `io.debezium.time.Timestamp` | `int64` | 밀리초 |
-| `DATETIME(4)` ~ `DATETIME(6)` | `io.debezium.time.MicroTimestamp` | `int64` | 마이크로초 |
+| `DATETIME`부터 `DATETIME(3)`까지 | `io.debezium.time.Timestamp` | `int64` | 밀리초 |
+| `DATETIME(4)`부터 `DATETIME(6)`까지 | `io.debezium.time.MicroTimestamp` | `int64` | 마이크로초 |
 
-기본 설정인 `time.precision.mode=adaptive_time_microseconds`에서는 `DATETIME(0)`~`DATETIME(3)`은 `Timestamp`(epoch 밀리초)로, `DATETIME(4)`~`DATETIME(6)`은 `MicroTimestamp`(epoch 마이크로초)로 직렬화됩니다. 둘 다 물리 타입은 똑같은 `int64`입니다.
+기본 설정인 `time.precision.mode=adaptive_time_microseconds`에서는 `DATETIME(0)`부터 `DATETIME(3)`까지는 `Timestamp`(epoch 밀리초)로, `DATETIME(4)`부터 `DATETIME(6)`까지는 `MicroTimestamp`(epoch 마이크로초)로 직렬화됩니다. 둘 다 물리 타입은 똑같은 `int64`입니다.
 
 실제로는 Debezium으로 들어오는 컬럼이 워낙 많다 보니, 시간 컬럼의 물리 타입이 `int64`라는 것만 보고 일괄적으로 "밀리초"로 매핑했습니다. 대부분의 `datetime` 컬럼은 그 가정이 맞았지만, `datetime(6)` 컬럼은 마이크로초 단위였습니다. 그 컬럼들만 값이 1000배 커졌고, 결과적으로 "말이 안 되게 미래로 튄 시각"이 되었습니다.
 
