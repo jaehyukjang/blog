@@ -1,5 +1,6 @@
 ---
 title: "About"
+description: "About Jaehyuk Jang, a data platform engineer working with Spark, Flink, Debezium, Airflow, and Iceberg."
 layout: "single"
 ShowToc: false
 comments: false

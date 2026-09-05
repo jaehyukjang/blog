@@ -1,5 +1,6 @@
 ---
 title: "About"
+description: "인도 핀테크 회사에서 데이터 플랫폼을 만들고 운영하는 Jaehyuk Jang의 소개와 글 모음입니다."
 layout: "single"
 ShowToc: false
 comments: false
