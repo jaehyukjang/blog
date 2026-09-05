@@ -47,8 +47,8 @@ The problem was that Debezium emits MySQL temporal types with **different logica
 
 | MySQL type | Debezium logical type (`name`) | Physical type (`type`) | Unit |
 |---|---|---|---|
-| `DATETIME` ~ `DATETIME(3)` | `io.debezium.time.Timestamp` | `int64` | milliseconds |
-| `DATETIME(4)` ~ `DATETIME(6)` | `io.debezium.time.MicroTimestamp` | `int64` | microseconds |
+| `DATETIME` to `DATETIME(3)` | `io.debezium.time.Timestamp` | `int64` | milliseconds |
+| `DATETIME(4)` to `DATETIME(6)` | `io.debezium.time.MicroTimestamp` | `int64` | microseconds |
 
 With the default `time.precision.mode=adaptive_time_microseconds`, `DATETIME(0)` to `DATETIME(3)` is serialized as `Timestamp` in epoch milliseconds, while `DATETIME(4)` to `DATETIME(6)` is serialized as `MicroTimestamp` in epoch microseconds. Both use the same physical type: `int64`.
 
