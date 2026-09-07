@@ -15,9 +15,10 @@ enableRobotsTXT = true
 
 [params]
   author = "Jaehyuk Jang"
-  description = "Data Engineering Blog"
+  description = "Hands-on data engineering — designing and operating production pipelines with CDC, Debezium, Flink, Iceberg, and Airflow, plus applying LLMs and AI agents to real data platform work. Problems from running data platforms at scale, and how they were solved."
+  keywords = ["Data Engineering", "CDC", "Debezium", "Apache Flink", "Apache Iceberg", "Airflow", "Kafka", "dbt", "Data Pipeline", "Streaming", "LLM", "AI Agent", "RAG"]
   showReadingTime = true
-  showShareButtons = false
+  showShareButtons = true
   showPostNavLinks = true
   showBreadCrumbs = true
   showCodeCopyButtons = true
@@ -25,7 +26,8 @@ enableRobotsTXT = true
   TocOpen = true
   comments = true
   defaultTheme = "auto"
-  env = "production"
+  # env는 하드코딩하지 않음 — hugo.IsProduction으로 자동 판별.
+  # `hugo` (배포): production → GA 켜짐 / `hugo server` (로컬): development → GA 꺼짐
 
   [[params.socialIcons]]
     name = "linkedin"
@@ -62,6 +64,11 @@ enableRobotsTXT = true
       name = "About"
       url = "/about/"
       weight = 3
+    [[languages.ko.menu.main]]
+      identifier = "search"
+      name = "Search"
+      url = "/search/"
+      weight = 4
 
   [languages.en]
     languageCode = "en"
@@ -85,6 +92,11 @@ enableRobotsTXT = true
       name = "About"
       url = "/about/"
       weight = 3
+    [[languages.en.menu.main]]
+      identifier = "search"
+      name = "Search"
+      url = "/search/"
+      weight = 4
 
 [taxonomies]
   tag = "tags"

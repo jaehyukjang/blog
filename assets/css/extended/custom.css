@@ -10,3 +10,16 @@
   border-radius: 12px;
   padding: 8px;
 }
+
+/* ---- 이전/다음 페이지: 무거운 회색 카드 톤 다운 ---- */
+.paginav {
+  border: 1px solid var(--border);
+  background: none;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* ---- 섹션 간 숨통: 태그/공유/댓글 사이 여백 ---- */
+.post-tags {
+  margin-top: 28px;
+}
