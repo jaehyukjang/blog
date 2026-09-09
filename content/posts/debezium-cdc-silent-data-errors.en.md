@@ -88,7 +88,7 @@ So we tested three combinations.
 
 The result was the same in all three cases. The converter was not the cause. The fact that the column was `tinyint` was almost incidental.
 
-The first thing we checked was whether Debezium was receiving that column value in the first place. If `binlog_row_image=MINIMAL` is used, MySQL may write only the columns needed for the change, so it is possible to suspect that the column was missing from the binlog event. But our setting was `FULL`, and row events were expected to contain the full set of column values. At least, this was not a problem caused by the column being omitted from the change row. From there, we narrowed the cause down to how `NULL` and schema defaults were handled in the event schema and serialization layer.
+The first thing we checked was whether Debezium was receiving that column value in the first place. With `binlog_row_image=MINIMAL`, MySQL may write only the columns needed for the change, so we considered whether the column was missing from the binlog event. But our setting was `FULL`, and row events were expected to contain the full set of column values. At least, this was not a problem caused by the column being omitted from the change row. From there, we narrowed the cause down to how `NULL` and schema defaults were handled in the event schema and serialization layer.
 
 The real issue was this: **when a nullable column has a DEFAULT, a NULL value can be replaced by that DEFAULT during serialization or downstream Connect data handling**.
 
@@ -127,7 +127,7 @@ In the Debezium documentation, the main warning for `none` is about schema chang
 
 | mode | Snapshot lock | What we observed |
 |---|---|---|
-| `minimal` | Used only in the initial phase | No duplicate |
+| `minimal` | Used only in the initial phase | No duplicates observed |
 | `none` | Not used | Same PK appeared as both `read` and `insert` |
 
 That does not mean `none` always creates this kind of duplicate. But in a setup like ours, where an existing schema is onboarded later and an initial snapshot is stitched together with subsequent CDC streaming, the snapshot boundary can affect how raw CDC should be interpreted.
@@ -138,7 +138,7 @@ If both event types exist for the same PK, a consumer reading raw CDC will see b
 
 After that, we used `minimal`, which is also Debezium's default, when onboarding new schemas. In our environment, after moving to `minimal`, we did not observe the earlier `read`/`insert` duplication again. Because the lock is only held during the initial phase, it also carried less operational burden than `extended`, which can block writes for the entire snapshot.
 
-Since then, I have been more careful when treating initial snapshot output as part of a raw change log. A snapshot is not just "reading the current rows once." It is a boundary that needs to be interpreted together with the streaming events that follow it.
+Since then, I have been more careful when treating initial snapshot output as part of a raw change log. A snapshot is not just "reading the current rows once." It has a boundary that needs to be considered alongside the streaming events that follow.
 
 ---
 

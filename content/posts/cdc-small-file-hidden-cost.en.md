@@ -3,7 +3,7 @@ title: "The Hidden Cost of CDC Pipelines: How Small Files Create an S3 Request B
 date: 2026-06-11
 draft: false
 tags: ["cdc", "s3", "cost-optimization", "debezium", "flink"]
-description: "Athena cost isn't just about data scanned. Learn how millions of small files from CDC pipelines silently drain your S3 request budget and degrade query performance — and how we fixed it."
+description: "Athena cost isn't just about data scanned. This post covers how millions of small files from our CDC pipeline increased S3 request costs and slowed down queries, and how we addressed the problem."
 cover:
   image: "/images/cdc-small-file-cover.png"
   alt: "CDC Small File Problem"
