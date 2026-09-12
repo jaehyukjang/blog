@@ -113,4 +113,8 @@ This experiment did not compare documents with and without links. All conditions
 
 My practical takeaway is narrower. **For now, I have not seen enough reason to spend more time on links specifically for AI retrieval.** I will keep the links that help people find and maintain documents, but I do not plan to spend time adding links solely to improve AI performance.
 
+There are limits to this experiment. It used only 43 documents and 15 questions, with three repetitions per condition. The links captured related topics, but this was not a knowledge graph with dependencies or cause-and-effect relationships modeled in detail. The results do not rule out benefits from that kind of graph. They show what happened in a knowledge base we actually maintain as Markdown documents in Git, with links between related documents.
+
+Next, I want to explicitly model entities such as systems, pipelines, and tables, along with their relationships, and use a graph database and GraphRAG to explore those relationships. I want to see how that compares with a Markdown knowledge base connected by document links.
+
 ---
