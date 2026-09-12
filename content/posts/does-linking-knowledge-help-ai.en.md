@@ -12,13 +12,13 @@ cover:
 
 When our team started running an AI agent, one question came up: **How do we give it accurate context about our systems?**
 
-We started organizing our knowledge in a Git repository. No vector database, embeddings, or separate search system. Just Markdown documents with links between related topics. The main purpose was to give the AI agent something to read and refer to, but we also wanted the knowledge to be easy for people to find and maintain.
+We put Markdown documents in a Git repository and linked related documents together. No vector database, embeddings, or separate search system. The main purpose was to give the AI agent something to read and refer to, but we also wanted the knowledge to be easy for people to find and maintain.
 
-Keeping Markdown documents in Git, adding cross-references, and having an AI agent read them and submit update PRs is similar to the [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) approach introduced by Andrej Karpathy.
+Connecting documents this way, with an AI agent reading them and submitting update PRs, is similar to the [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) approach introduced by Andrej Karpathy.
 
-Then I started wondering: **Do those links actually help the AI find documents?** We had built this for the agent, but I had never checked whether the links made a difference.
+But having links in the documents does not mean the AI uses them to navigate. Our agent mostly finds documents by searching with `rg` and reading the files it needs. What if we let it follow the existing links directly? Would it find the documents it needs more reliably than with search alone? Would it use fewer tokens?
 
-So I tested it using the documents we actually work with.
+So I compared `rg` search with link navigation using the knowledge base we actually work with.
 
 ---
 
@@ -107,12 +107,10 @@ Precision ranged from 0.31 to 0.56, below recall. For example, `gpt-5.5` achieve
 
 ## Did Document Links Help?
 
-In some cases, yes. With link navigation available, some models found more reference documents than they did with search alone. But the effect varied by model, and input token usage did not consistently decrease.
+In some cases, yes. When the existing links were available as a way to navigate, some models found more reference documents than they did with search alone. But the effect varied by model, and providing both search and links did not always improve results. Input token usage did not consistently decrease either.
 
-Based on these results, I do not think I need to spend time adding more links to our knowledge base just to improve AI retrieval. They helped some models, but the benefit was not consistent. I will keep the existing links, without putting extra effort into making the documents more densely connected for the AI.
+This experiment did not compare documents with and without links. All conditions used the same source documents. What changed was whether the AI had a tool for navigating the existing links. These results therefore do not show that document links are unnecessary or that adding more links would have no benefit.
 
-There are limits to this experiment. It used only 43 documents and 15 questions, with three repetitions per condition. The links captured related topics, but this was not a knowledge graph with dependencies or cause-and-effect relationships modeled in detail. The results do not rule out benefits from that kind of graph. They show what happened in a knowledge base we actually maintain as Markdown documents in Git, with links between related documents.
-
-Next, I want to explicitly model entities such as systems, pipelines, and tables, along with their relationships, and use a graph database and GraphRAG to explore those relationships. I want to see how that compares with a Markdown knowledge base connected by document links.
+My practical takeaway is narrower. **For now, I have not seen enough reason to spend more time on links specifically for AI retrieval.** I will keep the links that help people find and maintain documents, but I do not plan to spend time adding links solely to improve AI performance.
 
 ---
