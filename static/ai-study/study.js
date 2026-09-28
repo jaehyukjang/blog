@@ -25,20 +25,26 @@ fields.forEach(id => document.getElementById(id)?.addEventListener("input", upda
 document.querySelectorAll("[data-copy]").forEach(button => {
   button.addEventListener("click", async () => {
     const source = document.getElementById(button.dataset.copy);
+    if (!source) return;
+    const copyText = 'value' in source ? source.value : source.textContent;
     const originalLabel = button.textContent;
     let copied = false;
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(source.textContent);
+        await navigator.clipboard.writeText(copyText);
         copied = true;
       }
     } catch (_) { /* Local files may not allow the Clipboard API. */ }
     if (!copied) {
       const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(source);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      if (source instanceof HTMLTextAreaElement || source instanceof HTMLInputElement) {
+        source.select();
+      } else {
+        const range = document.createRange();
+        range.selectNodeContents(source);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
       try { copied = document.execCommand("copy"); } catch (_) { copied = false; }
       if (copied) selection.removeAllRanges();
     }
@@ -75,4 +81,27 @@ document.querySelectorAll("[data-quiz]").forEach(quiz => {
 });
 document.querySelectorAll("[data-print]").forEach(button => {
   button.addEventListener("click", () => window.print());
+});
+
+document.querySelectorAll("[data-choice]").forEach(question => {
+  question.addEventListener("change", event => {
+    const message = event.target.dataset.feedback;
+    if (message) question.querySelector(".feedback").textContent = message;
+  });
+});
+
+document.querySelectorAll("[data-download]").forEach(button => {
+  button.addEventListener("click", () => {
+    const field = document.getElementById(button.dataset.download);
+    if (!field) return;
+    const content = 'value' in field ? field.value : field.textContent;
+    const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = button.dataset.filename || "AI-메모.txt";
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+  });
 });
