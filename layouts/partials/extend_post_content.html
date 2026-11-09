@@ -1,0 +1,18 @@
+{{- /* Series navigation box — shown when a post has `series` in front matter. */ -}}
+{{- range .GetTerms "series" }}
+{{- $pages := .Pages.ByDate }}
+<nav class="series-box">
+  <p class="series-title">{{ if eq $.Lang "ko" }}시리즈{{ else }}Series{{ end }}: <a href="{{ .Permalink }}">{{ .LinkTitle }}</a> ({{ len $pages }})</p>
+  <ol>
+    {{- range $pages }}
+    <li>{{ if eq .Permalink $.Permalink }}<strong>{{ .Title }}</strong>{{ else }}<a href="{{ .Permalink }}">{{ .Title }}</a>{{ end }}</li>
+    {{- end }}
+  </ol>
+</nav>
+{{- end }}
+<style>
+  .series-box { margin: 2.5rem 0 1rem; padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--code-bg); }
+  .series-box .series-title { margin: 0 0 .5rem; font-weight: 600; }
+  .series-box ol { margin: 0; padding-left: 1.25rem; }
+  .series-box li { margin: .25rem 0; }
+</style>

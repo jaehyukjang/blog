@@ -1,22 +1,26 @@
 ---
 title: "About"
-description: "About Jaehyuk Jang, a data platform engineer working with Spark, Flink, Debezium, Airflow, and Iceberg."
+description: "About Jaehyuk Jang, Data Engineering Lead at AFINIT, building and operating a fintech data platform."
 layout: "single"
 ShowToc: false
+ShowReadingTime: false
+hideDescription: true
 comments: false
 ---
 
 Hi, I'm Jaehyuk.
 
-I build and operate data platforms at a fintech company in India. I mostly work with Spark, Flink, Debezium, Airflow, and Iceberg. These days I'm interested in modernizing data stacks and building data platforms that are AI-ready.
+I lead the Data Engineering team at AFINIT, where I own the data platform behind True Balance and True Credit, fintech services for the Indian market. That covers ingestion and streaming through storage, ELT, governance, and monitoring, and I stay hands-on with architecture, operations, and incident response.
+
+Working with payments and lending data, I care as much about whether the data is correct and who can access it as about whether the pipelines are running. Lately I've been focused on AI-ready data platforms: treating AI agents as a new kind of data consumer and giving them governed ways to find and use data.
 
 This is where I write about things I learn along the way.
 
 ## Tech Stack
 
-- **Processing:** Spark, Flink, dbt
+- **Processing:** Spark, PySpark, Flink, dbt, EMR
 - **Streaming & CDC:** Debezium, Kafka, Kinesis, NiFi
-- **Storage & DW:** S3, Athena, Iceberg, DynamoDB
+- **Storage & DW:** S3, Athena, Glue, Iceberg, DynamoDB, OpenSearch
 - **Orchestration:** Airflow
 - **DevOps & Infra:** Docker, Jenkins, SAM, CloudFormation, Lake Formation
 - **Monitoring:** Prometheus, Grafana, CloudWatch, Kibana
@@ -26,6 +30,7 @@ This is where I write about things I learn along the way.
 ## Writing
 
 - [Three Questions on the Way to an AI-Ready Data Platform](https://blog.afinit.com/ai-ready-data-platform)
+- [Apache Iceberg Table Operations in Practice: From Snapshot Management to Compaction](https://blog.afinit.com/apache-iceberg-table-operations)
 - [How CDC Changes Data Platforms: CDC-based Incremental Replication](https://blog.afinit.com/cdc-incremental-replication)
 - [Why We Redesigned Our CDC Pipeline with Debezium and Flink](https://blog.afinit.com/cdc-pipeline-debezium-flink)
 - [From NiFi to Apache Flink: Improving a Real-time SMS Pipeline](https://blog.afinit.com/nifi-apache-flink-sms-pipeline)

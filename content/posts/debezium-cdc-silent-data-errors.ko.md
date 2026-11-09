@@ -2,6 +2,7 @@
 title: "Debezium은 소스를 그대로 복제하지 않는다: 데이터가 조용히 어긋나는 세 가지 사례"
 date: 2026-09-05
 draft: false
+series: ["Debezium in Production"]
 tags: ["cdc", "debezium", "mysql", "data-engineering"]
 description: "CDC 파이프라인이 잘 도는 것과 데이터가 기대한 의미와 형태로 만들어지는 것은 다른 문제였습니다. Debezium을 프로덕션에서 운영하며 만난, 에러 없이 데이터가 조용히 어긋나는 세 가지 사례를 정리했습니다."
 cover:
@@ -154,4 +155,4 @@ Debezium 문서에서 `none`의 주된 경고는 스냅샷 중 schema change가 
 
 그래서 CDC를 운영하면서 중요했던 건, **파이프라인이 잘 도는지가 아니라 실제로 데이터가 기대한 의미와 형태로 만들어지고 있는지를 계속 확인하는 일**이었습니다. connector와 converter의 기본 설정, consumer의 해석 방식, 스냅샷과 streaming의 경계가 모두 데이터의 최종 형태에 영향을 줄 수 있었습니다.
 
-이번 글이 "잘 흘러가도 데이터는 조용히 어긋날 수 있다"는 이야기였다면, 다음 글에서는 조금 다른 종류의 이야기를 정리해보려 합니다. schema history, pause와 restart의 차이, worker failover와 rebalance처럼, **Debezium과 Kafka Connect가 프로덕션에서 실제로 어떻게 움직이는지**에 대한 이야기입니다.
+이번 글이 "잘 흘러가도 데이터는 조용히 어긋날 수 있다"는 이야기였다면, [다음 글](/posts/debezium-connector-operations/)에서는 조금 다른 종류의 이야기를 정리했습니다. 스키마 불일치, SQL 파싱 오류, DB 연결 유지, task 재할당 지연처럼, **Debezium과 Kafka Connect가 프로덕션에서 실제로 어떻게 움직이는지**에 대한 이야기입니다.

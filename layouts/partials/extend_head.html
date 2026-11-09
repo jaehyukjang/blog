@@ -3,3 +3,8 @@
 <script data-goatcounter="https://backpressured.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 {{- end }}
+
+{{- /* hideDescription: keep description for meta tags/SEO but don't render it under the title. */ -}}
+{{- if .Params.hideDescription }}
+<style>.post-header .post-description { display: none; }</style>
+{{- end }}

@@ -2,6 +2,7 @@
 title: "Debezium Does Not Replicate the Source As-Is: Three Ways Data Can Drift Quietly"
 date: 2026-09-05
 draft: false
+series: ["Debezium in Production"]
 tags: ["cdc", "debezium", "mysql", "data-engineering"]
 description: "A CDC pipeline can run without errors while the data it produces no longer has the meaning or shape you expected. These are three quiet data mismatches we ran into while operating Debezium in production."
 cover:
@@ -154,4 +155,4 @@ In reality, several layers sit in between. How timestamp units are interpreted, 
 
 What mattered in operating CDC was not just whether the pipeline was running. It was continuously checking whether the data was being produced with the meaning and shape we expected. Connector and converter defaults, consumer interpretation, and the boundary between snapshot and streaming can all affect the final data.
 
-If this post was about how data can quietly drift even when CDC is flowing, the next one will be about a different kind of lesson: how Debezium and Kafka Connect actually behave in production, including schema history, the difference between pause and restart, worker failover, and rebalance.
+If this post was about how data can quietly drift even when CDC is flowing, the [next one](/en/posts/debezium-connector-operations/) covers a different kind of lesson: how Debezium and Kafka Connect actually behave in production, including schema mismatches, SQL parsing failures, persistent database connections, and delayed task reassignment.
