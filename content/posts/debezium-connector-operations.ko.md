@@ -2,7 +2,7 @@
 title: "Debezium 커넥터는 예상대로 움직이지 않는다: 운영 중 겪은 네 가지 사례"
 date: 2026-11-09T00:00:00+09:00
 draft: false
-series: ["Debezium in Production"]
+series: ["Debezium 운영기"]
 tags: ["cdc", "debezium", "kafka-connect", "data-engineering"]
 description: "Debezium과 Kafka Connect 운영 중 겪은 스키마 불일치, SQL 파싱 오류, DB 연결 유지, task 재할당 지연 사례와 대응 과정을 정리했습니다."
 cover:

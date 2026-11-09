@@ -2,7 +2,7 @@
 title: "Debezium은 소스를 그대로 복제하지 않는다: 데이터가 조용히 어긋나는 세 가지 사례"
 date: 2026-09-05
 draft: false
-series: ["Debezium in Production"]
+series: ["Debezium 운영기"]
 tags: ["cdc", "debezium", "mysql", "data-engineering"]
 description: "CDC 파이프라인이 잘 도는 것과 데이터가 기대한 의미와 형태로 만들어지는 것은 다른 문제였습니다. Debezium을 프로덕션에서 운영하며 만난, 에러 없이 데이터가 조용히 어긋나는 세 가지 사례를 정리했습니다."
 cover:

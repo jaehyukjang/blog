@@ -2,7 +2,7 @@
 title: "Debezium Does Not Replicate the Source As-Is: Three Ways Data Can Drift Quietly"
 date: 2026-09-05
 draft: false
-series: ["Debezium in Production"]
+series: ["Running Debezium"]
 tags: ["cdc", "debezium", "mysql", "data-engineering"]
 description: "A CDC pipeline can run without errors while the data it produces no longer has the meaning or shape you expected. These are three quiet data mismatches we ran into while operating Debezium in production."
 cover:

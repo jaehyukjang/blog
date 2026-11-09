@@ -2,7 +2,7 @@
 title: "Debezium Connectors Do Not Always Behave as Expected: Four Cases from Production"
 date: 2026-11-09T00:00:00+09:00
 draft: false
-series: ["Debezium in Production"]
+series: ["Running Debezium"]
 tags: ["cdc", "debezium", "kafka-connect", "data-engineering"]
 description: "Four cases from operating Debezium and Kafka Connect: schema mismatches, SQL parsing failures, persistent database connections, and delayed task reassignment—and how we handled them."
 cover:
