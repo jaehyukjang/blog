@@ -25,6 +25,8 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      indexnow_urls: ${{ steps.indexnow.outputs.urls }}
     env:
       HUGO_VERSION: 0.147.6
     steps:
@@ -49,6 +51,20 @@ jobs:
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - name: Collect IndexNow URLs
+        id: indexnow
+        run: |
+          changed=""
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            changed=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" || true)
+          fi
+          urls=$(python3 .github/tools/indexnow_urls.py "${{ steps.pages.outputs.base_url }}" public $changed)
+          echo "$urls"
+          {
+            echo "urls<<EOF"
+            echo "$urls"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
@@ -64,3 +80,15 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+      - name: Notify IndexNow
+        if: needs.build.outputs.indexnow_urls != ''
+        env:
+          URLS: ${{ needs.build.outputs.indexnow_urls }}
+          INDEXNOW_KEY: 2a4dfe018498e30baff75ffcd428fb1a
+        run: |
+          payload=$(python3 -c 'import json,os; print(json.dumps({"host":"backpressured.dev","key":os.environ["INDEXNOW_KEY"],"keyLocation":"https://backpressured.dev/"+os.environ["INDEXNOW_KEY"]+".txt","urlList":os.environ["URLS"].split()}))')
+          echo "$payload"
+          code=$(curl -s -o /dev/stderr -w "%{http_code}" -X POST https://api.indexnow.org/indexnow \
+            -H "Content-Type: application/json; charset=utf-8" -d "$payload")
+          echo "IndexNow HTTP $code"
+          # 200/202 = accepted; don't fail the deploy on IndexNow errors
